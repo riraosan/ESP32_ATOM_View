@@ -1,20 +1,21 @@
 #pragma once
 
-#include <memory>
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <StreamUtils.h>
-#include <WiFiClientSecure.h>  //for JMA & ThingSpeak
+#include <Display.h>
 #include <HTTPClient.h>
+#include <StreamUtils.h>
 #include <ThingSpeak.h>
+#include <WiFiClientSecure.h>  //for JMA & ThingSpeak
 #include <esp32-hal-log.h>
 
 #include <Connect.hpp>
-#include <Display.h>
+#include <memory>
 
 class ATOMDoc : public Connect {
-public:
-  ATOMDoc(void) : _url("https://www.jma.go.jp/bosai/forecast/data/forecast/__WEATHER_CODE__0.json"),
+ public:
+  ATOMDoc(void) : Connect("atom_doc", "ATOM_DOC-G", 80),
+                  _url("https://www.jma.go.jp/bosai/forecast/data/forecast/__WEATHER_CODE__0.json"),
                   _codeDoc(6144) {
     // R"()" = Raw String Literals(C++)
     _filter = R"(
@@ -40,13 +41,10 @@ public:
     ])";
   }
 
-  void setAreaCode(uint16_t localGovernmentCode) {
-    _localGovernmentCode = localGovernmentCode;
-  }
-
-  void setDayTime(String day, String time) {
-    _day  = day;
-    _time = time;
+  void startDocAPI(void) {
+    _server.on("/api/v1/weather.json", [&]() {
+      _server.send(200, "application/json", _filter);
+    });
   }
 
   void requestWeatherInfomation(void) {
@@ -58,7 +56,7 @@ public:
     client->setHandshakeTimeout(180);
     ThingSpeak.begin(*client);
 
-    int statusCode = ThingSpeak.readMultipleFields(SECRET_CH_ID);
+    int statusCode = ThingSpeak.readMultipleFields(1441019);
 
     if (statusCode == 200) {
       // Fetch the stored data
@@ -70,7 +68,6 @@ public:
       String createdAt   = ThingSpeak.getCreatedAt();      // Created-at timestamp
 
       log_i("[%s] %2.1f*C, %2.1f%%, %4.1fhPa", createdAt.c_str(), temperature, humidity, pressure);
-
     } else {
       log_e("Problem reading channel. HTTP error code %d", statusCode);
     }
@@ -118,11 +115,11 @@ public:
     JsonObject root_0 = _codeDoc[0];  // 0 or 1
 
     if (!root_0.isNull()) {
-      const char* publishingOffice = root_0["publishingOffice"];
-      const char* reportDatetime   = root_0["reportDatetime"];
+      const char *publishingOffice = root_0["publishingOffice"];
+      const char *reportDatetime   = root_0["reportDatetime"];
 
-      _publishingOffice = (const char*)publishingOffice;
-      _reportDatetime   = (const char*)reportDatetime;
+      _publishingOffice = (const char *)publishingOffice;
+      _reportDatetime   = (const char *)reportDatetime;
 
       Serial.println("publishingOffice  " + _publishingOffice);
       Serial.println("  reportDatetime  " + _reportDatetime);
@@ -131,48 +128,49 @@ public:
 
       if (!timeSeries.isNull()) {
         JsonObject  areas_0   = timeSeries[0]["areas"][0];
-        const char* area_name = areas_0["area"]["name"];
-        const char* area_code = areas_0["area"]["code"];
+        const char *area_name = areas_0["area"]["name"];
+        const char *area_code = areas_0["area"]["code"];
 
         JsonArray weatherCodes = areas_0["weatherCodes"];
         JsonArray weathers     = areas_0["weathers"];
 
-        _areaName = (const char*)area_name;
-        _areaCode = (const char*)area_code;
-        Serial.println("       area_name  " + String((const char*)area_name));
-        Serial.println("       area_code  " + String((const char*)area_code));
+        _areaName = (const char *)area_name;
+        _areaCode = (const char *)area_code;
+        Serial.println("       area_name  " + String((const char *)area_name));
+        Serial.println("       area_code  " + String((const char *)area_code));
 
         if (!weatherCodes.isNull()) {
-          _todayForecast   = (const char*)weatherCodes[0];
-          _nextdayForecast = (const char*)weatherCodes[1];
-          Serial.println(" weatherCodes[0]  " + String((const char*)weatherCodes[0]));
-          Serial.println(" weatherCodes[1]  " + String((const char*)weatherCodes[1]));
-          Serial.println(" weatherCodes[2]  " + String((const char*)weatherCodes[2]));
+          _todayForecast   = (const char *)weatherCodes[0];
+          _nextdayForecast = (const char *)weatherCodes[1];
+          Serial.println(" weatherCodes[0]  " + String((const char *)weatherCodes[0]));
+          Serial.println(" weatherCodes[1]  " + String((const char *)weatherCodes[1]));
+          Serial.println(" weatherCodes[2]  " + String((const char *)weatherCodes[2]));
         }
 
         if (!weathers.isNull()) {
-          _weathers0 = (const char*)weathers[0];
-          _weathers1 = (const char*)weathers[1];
+          _weathers0 = (const char *)weathers[0];
+          _weathers1 = (const char *)weathers[1];
 
-          Serial.println("     weathers[0]  " + String((const char*)weathers[0]));
-          Serial.println("     weathers[1]  " + String((const char*)weathers[1]));
-          Serial.println("     weathers[2]  " + String((const char*)weathers[2]));
+          Serial.println("     weathers[0]  " + String((const char *)weathers[0]));
+          Serial.println("     weathers[1]  " + String((const char *)weathers[1]));
+          Serial.println("     weathers[2]  " + String((const char *)weathers[2]));
         }
       }
 
+      //天気予報コードより、予報文言とアイコンファイル名を取得する
       String filter(R"({"__CODE__": [true]})");
       filter.replace("__CODE__", _todayForecast);
 
-      StaticJsonDocument<255> _forecastDoc;
-      StaticJsonDocument<50>  _filter;
-      deserializeJson(_filter, filter);
+      StaticJsonDocument<255> forecastDoc;
+      StaticJsonDocument<50>  forecastfilter;
+      deserializeJson(forecastfilter, filter);
 
       File file = SPIFFS.open("/codes.json");
 
       if (file) {
-        DeserializationError error = deserializeJson(_forecastDoc,
+        DeserializationError error = deserializeJson(forecastDoc,
                                                      file,
-                                                     DeserializationOption::Filter(_filter));
+                                                     DeserializationOption::Filter(forecastfilter));
 
         if (error) {
           log_e("Failed to read codes.json.");
@@ -180,19 +178,28 @@ public:
           return;
         }
 
-        JsonArray root = _forecastDoc[_todayForecast.c_str()];
+        JsonArray root = forecastDoc[_todayForecast.c_str()];
 
         if (!root.isNull()) {
-          _iconFile   = String("/") + String((const char*)root[0]);  // "100.gif"
-          _forecastJP = (const char*)root[3];                        // "晴"
-          _forecastEN = (const char*)root[4];                        // "CLEAR"
+          _iconFile   = String("/") + String((const char *)root[0]);  // "100.gif"
+          _forecastJP = (const char *)root[3];                        // "晴"
+          _forecastEN = (const char *)root[4];                        // "CLEAR"
 
-          log_d("%s_%s_%s", _iconFile.c_str(), _forecastJP.c_str(), _forecastEN.c_str());
+          log_d("アイコンファイル名:%s\n予報（日本語）:%s\n予報（英語）:%s", _iconFile.c_str(), _forecastJP.c_str(), _forecastEN.c_str());
         }
-      }
 
-      file.close();
+        file.close();
+      }
     }
+  }
+
+  void setAreaCode(uint16_t localGovernmentCode) {
+    _localGovernmentCode = localGovernmentCode;
+  }
+
+  void setDayTime(String day, String time) {
+    _day  = day;
+    _time = time;
   }
 
   String getTodayForecast(void) {
@@ -222,6 +229,8 @@ public:
         requestWeatherJson();
         parseWeatherJson();
 
+        debugPrint();
+
         log_i("MESSAGE::MSG_UPDATE_DOCUMENT");
         sendMessage(MESSAGE::MSG_UPDATE_NOTHING);
         break;
@@ -232,7 +241,27 @@ public:
     _portal.handleClient();
   }
 
-private:
+  void debugPrint(void) {
+    log_i("%s %s", _day.c_str(), _time.c_str());
+    log_i("%d %s", _localGovernmentCode, _url.c_str());
+
+    log_i("%s %s %s %s", _areaName.c_str(),
+          _areaCode.c_str(),
+          _todayForecast.c_str(),
+          _nextdayForecast.c_str());
+
+    log_i("%s %s %s %s %s %s %s", _weathers0.c_str(),
+          _weathers1.c_str(),
+          _forecastJP.c_str(),
+          _forecastEN.c_str(),
+          _iconFile.c_str(),
+          _publishingOffice.c_str(),
+          _reportDatetime.c_str());
+
+    log_i("%s", _filter.c_str());
+  }
+
+ private:
   String _day;
   String _time;
 

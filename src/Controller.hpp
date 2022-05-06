@@ -41,8 +41,8 @@ using ATOM = ATOMView;
 
 class Controller {
 public:
-  Controller() {
-  }
+ Controller() {
+ }
 
   static void sendMessage(MESSAGE message) {
     _message = message;
@@ -84,7 +84,9 @@ public:
     if (!SPIFFS.begin()) {
       log_e("fail to mount.");
     }
+    _atom.startDocAPI();
 
+    _atom.setAreaCode(27000);
     _atom.begin(SECRET_SSID, SECRET_PASS);
 
     _serverChecker.attach(30, updatePeriod);
@@ -111,8 +113,8 @@ public:
       setNtpClock();
       _atom.sendMessage(MESSAGE::MSG_UPDATE_CLOCK);
     }
-
     _atom.update();
+
     delay(1);
   }
 

@@ -24,18 +24,18 @@ SOFTWARE.
 
 #pragma once
 
+#include <Task.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <Task.h>
+
 #include <memory>
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include <Arduino.h>
-#include <WiFi.h>
-#include <WebServer.h>
-#include <ESPmDNS.h>
-
 #include <AutoConnect.h>
+#include <ESPmDNS.h>
+#include <WebServer.h>
+#include <WiFi.h>
 #include <message.h>
 #include <secrets.h>
 using WiFiWebServer = WebServer;
@@ -46,8 +46,12 @@ using WiFiWebServer = WebServer;
 #include <esp32-hal-log.h>
 
 class Connect : public Task {
-public:
-  Connect() : _message(MESSAGE::MSG_UPDATE_NOTHING) {
+ public:
+  Connect(String hostName, String apName, uint16_t httpPort) : _portal(_server),
+                                                               _hostName(hostName),
+                                                               _apName(apName),
+                                                               _httpPort(httpPort),
+                                                               _message(MESSAGE::MSG_UPDATE_NOTHING) {
     _content = String(R"(
     <!DOCTYPE html>
     <html>
@@ -79,7 +83,7 @@ public:
     begin("", "");
   }
 
-  void begin(const char* SSID, const char* PASSWORD) {
+  void begin(const char *ssid, const char *password) {
     beginAPI();
 
     _config.autoReconnect = true;
@@ -90,10 +94,10 @@ public:
 
     bool result = false;
 
-    if (String(SSID).isEmpty() || String(PASSWORD).isEmpty()) {
+    if (String(ssid).isEmpty() || String(password).isEmpty()) {
       result = _portal.begin();
     } else {
-      result = _portal.begin(SSID, PASSWORD);
+      result = _portal.begin(ssid, password);
     }
 
     if (result) {
@@ -112,15 +116,15 @@ public:
 
   virtual void update(void) = 0;
 
-protected:
-  virtual void beginAPI(void) {
+ protected:
+  void beginAPI(void) {
     _server.on("/", [&]() {
       _content.replace("__AC_LINK__", String(AUTOCONNECT_LINK(COG_16)));
       _server.send(200, "text/html", _content);
     });
   }
 
-  void run(void* data) {
+  void run(void *data) {
     for (;;) {
       switch (_message) {
         case MESSAGE::MSG_UPDATE_DOCUMENT:
