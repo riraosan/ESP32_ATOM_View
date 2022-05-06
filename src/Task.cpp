@@ -22,12 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <Task.h>
+#include <esp32-hal-log.h>
+#include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+
 #include <string>
-#include <esp_log.h>
-#include <esp32-hal-log.h>
-#include <Task.h>
 
 Task::Task(std::string taskName, uint16_t taskSize, uint8_t priority) {
   m_handle   = nullptr;

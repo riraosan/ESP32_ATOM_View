@@ -24,12 +24,12 @@ SOFTWARE.
 
 #pragma once
 
-#include <memory>
 #include <Arduino.h>
 #include <Ticker.h>
-
 #include <message.h>
 #include <secrets.h>
+
+#include <memory>
 
 #if defined(ATOM_DOC)
 #include <ATOMDoc.hpp>
@@ -40,9 +40,8 @@ using ATOM = ATOMView;
 #endif
 
 class Controller {
-public:
- Controller() {
- }
+ public:
+  Controller() {}
 
   static void sendMessage(MESSAGE message) {
     _message = message;
@@ -84,11 +83,16 @@ public:
     if (!SPIFFS.begin()) {
       log_e("fail to mount.");
     }
+#if defined(ATOM_DOC)
     _atom.startDocAPI();
-
     _atom.setAreaCode(27000);
     _atom.begin(SECRET_SSID, SECRET_PASS);
+#else
+    // Serial.begin(115200);
+    _atom.begin();
+#endif
 
+    //_serverChecker.attach(60 * 10, updatePeriod);
     _serverChecker.attach(30, updatePeriod);
 
     configTzTime(TIME_ZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
@@ -102,7 +106,7 @@ public:
       case MESSAGE::MSG_UPDATE_DOCUMENT:
         _atom.sendMessage(_message);
         _atom.update();
-        // log_i("MESSAGE::MSG_UPDATE_DOCUMENT");
+
         sendMessage(MESSAGE::MSG_UPDATE_NOTHING);
         break;
       default:
@@ -113,6 +117,7 @@ public:
       setNtpClock();
       _atom.sendMessage(MESSAGE::MSG_UPDATE_CLOCK);
     }
+
     _atom.update();
 
     delay(1);
@@ -121,7 +126,7 @@ public:
   static MESSAGE _message;
   static bool    _clock;
 
-private:
+ private:
   Ticker _serverChecker;
   Ticker _ntpClocker;
   ATOM   _atom;

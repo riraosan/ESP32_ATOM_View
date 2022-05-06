@@ -1,26 +1,27 @@
 
 #pragma once
-#pragma once
-// #include <freertos/FreeRTOS.h>
-// #include <freertos/task.h>
-// #include <Task.h>
-#include <memory>
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <Display.h>
+#include <HTTPClient.h>
 #include <StreamUtils.h>
 #include <WiFiClient.h>
-#include <HTTPClient.h>
 #include <esp32-hal-log.h>
 
 #include <Connect.hpp>
-#include <Display.h>
+#include <memory>
 
 class ATOMView : public Connect {
-public:
-  ATOMView() : _hostName("atom_view"),
-               _apName("ATOM_VIEW-G"),
-               _httpPort(80) {}
+ public:
+  ATOMView() : Connect("atom_view", "ATOM_VIEW-G", 80),
+               _doc(500) {
+  }
+
+  void begin(void) {
+    _disp.begin();
+    Connect::begin(SECRET_SSID, SECRET_PASS);
+  }
 
   void sendMessage(MESSAGE message) {
     _message = message;
@@ -37,16 +38,16 @@ public:
     std::unique_ptr<HTTPClient> http(new HTTPClient);
     std::unique_ptr<WiFiClient> client(new WiFiClient);
 
-    http->begin(*client, "http://atom_doc.local/weather.json");
+    http->begin(*client, "http://192.168.1.51/api/v1/weather.json");
 
     int httpCode = http->GET();
     if (httpCode > 0) {
       if (httpCode == HTTP_CODE_OK) {
         ReadLoggingStream loggingStream(http->getStream(), Serial);
-        // deserializeJson(_codeDoc, loggingStream);
+        deserializeJson(_doc, loggingStream);
       }
     } else {
-      String error = http->errorToString(httpCode);
+      String error(http->errorToString(httpCode));
       log_e("[HTTP] GET... failed, error: %s", error.c_str());
     }
 
@@ -63,12 +64,12 @@ public:
         requestWeatherJson();
         parseWeatherJson();
 
-        _disp.setDegree(_degree);
-        _disp.setHumidity(_humidity);
-        _disp.setAtomPressure(_pressure);
-        _disp.setWeatherforcastJP(_forecastJP);
-        _disp.setWeatherforcastEN(_forecastEN);
-        _disp.setImageFilename(_filename);
+        // _disp.setDegree(_degree);
+        // _disp.setHumidity(_humidity);
+        // _disp.setAtomPressure(_pressure);
+        // _disp.setWeatherforcastJP(_forecastJP);
+        // _disp.setWeatherforcastEN(_forecastEN);
+        // _disp.setImageFilename(_filename);
         log_i("MESSAGE::MSG_UPDATE_DOCUMENT");
         sendMessage(MESSAGE::MSG_UPDATE_NOTHING);
         break;
@@ -89,12 +90,8 @@ public:
     delay(1);
   }
 
-private:
+ private:
   Display _disp;
-
-  String  _hostName;
-  String  _apName;
-  uint8_t _httpPort;
 
   String _day;
   String _time;
@@ -105,4 +102,6 @@ private:
   String _forecastJP;  //日本語予報
   String _forecastEN;  //英語予報
   String _filename;    //アイコンファイル名
+
+  DynamicJsonDocument _doc;
 };

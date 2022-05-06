@@ -24,19 +24,20 @@ SOFTWARE.
 
 #pragma once
 
-#include <memory>
-#include <Arduino.h>
-#include <SPIFFS.h>
 #include <AnimatedGIF.h>
+#include <Arduino.h>
 #include <ArduinoJson.h>
+#include <ESP32_8BIT_CVBS.h>
+#include <M5Unified.h>
+#include <SPIFFS.h>
 #include <efontEnableJaMini.h>
 #include <efontFontData.h>
-#include <M5Unified.h>
-#include <ESP32_8BIT_CVBS.h>
 #include <message.h>
 
+#include <memory>
+
 class Display {
-public:
+ public:
   Display(void);
   void begin(void);
   void update(void);
@@ -57,7 +58,7 @@ public:
 
   static void sendMessage(MESSAGE message);
 
-private:
+ private:
   AnimatedGIF _gif;
 
   static inline void    _GIFDraw(GIFDRAW *pDraw);
