@@ -90,6 +90,7 @@ class Connect : public Task {
     _config.autoReconnect = true;
     _config.ota           = AC_OTA_BUILTIN;
     _config.apid          = _apName;
+    _config.hostName      = _hostName;
 
     _portal.config(_config);
 

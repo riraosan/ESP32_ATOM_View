@@ -24,17 +24,17 @@ SOFTWARE.
 
 #pragma once
 
-#include <AnimatedGIF.h>
+#include <memory>
 #include <Arduino.h>
+#include <AnimatedGIF.h>
 #include <ArduinoJson.h>
-#include <ESP32_8BIT_CVBS.h>
-#include <M5Unified.h>
 #include <SPIFFS.h>
-#include <efontEnableJaMini.h>
-#include <efontFontData.h>
 #include <message.h>
 
-#include <memory>
+#include <efontEnableJaMini.h>
+#include <efontFontData.h>
+#include <M5Unified.h>
+#include <ESP32_8BIT_CVBS.h>
 
 class Display {
  public:

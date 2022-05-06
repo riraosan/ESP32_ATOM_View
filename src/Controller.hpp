@@ -83,12 +83,13 @@ class Controller {
     if (!SPIFFS.begin()) {
       log_e("fail to mount.");
     }
+    // Serial.begin(115200);
+
 #if defined(ATOM_DOC)
     _atom.startDocAPI();
     _atom.setAreaCode(27000);
     _atom.begin(SECRET_SSID, SECRET_PASS);
 #else
-    // Serial.begin(115200);
     _atom.begin();
 #endif
 

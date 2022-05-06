@@ -143,8 +143,8 @@ void Display::displayWeather(void) {
   char humid[10] = {0};
   char press[10] = {0};
 
-  sprintf(tempe, "%4.1f", _degree);
-  sprintf(humid, "%4.1f", _humidity);
+  sprintf(tempe, "%2.1f", _degree);
+  sprintf(humid, "%2.0f", _humidity);
   sprintf(press, "%4.1f", _pressure);
 
   _data.fillSprite(_bgColor);
@@ -167,25 +167,25 @@ void Display::displayWeather(void) {
   _data.setCursor(0, 16 * 3);
   _data.setTextColor(0xFFFF, _bgTemperature);
   _data.setTextSize(1);
-  _data.print(" degree:");
+  _data.print("   Degree:");
   _data.print(tempe);
-  _data.print("*C ");
+  _data.print("*C     ");
 
   // 湿度
   _data.setCursor(0, 16 * 4);
   _data.setTextColor(0xFFFF, _bgHumidity);
   _data.setTextSize(1);
-  _data.print("    Humidity:");
+  _data.print(" Humidity:");
   _data.print(humid);
-  _data.print("%  ");
+  _data.print("%        ");
 
   // 大気圧
   _data.setCursor(0, 16 * 5);
   _data.setTextColor(0xFFFF, _bgPressure);
   _data.setTextSize(1);
-  _data.print("    Pressure:");
+  _data.print(" Pressure:");
   _data.print(press);
-  _data.print("hPa");
+  _data.print("hPa  ");
 
   // log_d("%2.1f*C, %2.1f%%, %4.1fhPa", _degree, _humidity, _pressure);
 
@@ -218,12 +218,12 @@ void Display::displayImage(void) {
 }
 
 void Display::update() {
-  // draw Sprite buffer
+  // to Sprite buffer
   // displayImage();
   displayTitle();
-  // displayWeather();
+  displayWeather();
 
-  // draw CVBS buffer
+  // to CVBS buffer
   _display.display();
   delay(1);
 }

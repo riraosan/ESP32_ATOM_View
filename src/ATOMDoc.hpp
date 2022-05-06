@@ -282,7 +282,7 @@ class ATOMDoc : public Connect {
           _areaCode.c_str(),
           _todayForecast.c_str());
 
-    log_i("%s, %s, %s, %s, %s, %s %f %f %f",
+    log_i("%s, %s, %s, %s, %s, %s, %f, %f, %f",
           _weathers0.c_str(),
           _winds0.c_str(),
           _waves0.c_str(),

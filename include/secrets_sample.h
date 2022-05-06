@@ -9,7 +9,7 @@
 #define NTP_SERVER3 "asia.pool.ntp.org"
 
 // place
-#define CAFE2
+#define CAFE1
 
 #if defined(HOME)
 #define SECRET_SSID "your_ssid"
@@ -24,8 +24,8 @@
 #define SECRET_SSID "your_ssid"
 #define SECRET_PASS "your_ap_password"
 #elif defined(CAFE2)
-#define SECRET_SSID "Le-Garage-wifi"
-#define SECRET_PASS "Garage5711"
+#define SECRET_SSID "your_ssid"
+#define SECRET_PASS "your_ap_password"
 #endif
 
 #define SECRET_CH_ID        0000000  // replace 0000000 with your channel number
