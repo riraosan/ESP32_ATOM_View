@@ -13,9 +13,9 @@
 #include <memory>
 
 class ATOMView : public Connect {
- public:
-  ATOMView() : Connect("atom_view", "ATOM_VIEW-G", 80),
-               _doc(600),
+public:
+  ATOMView() : Connect("atom_view_test", "ATOM_VIEW-G", 80),
+               _doc(700),
                _apiURI("/api/v1/weather.json") {
   }
 
@@ -45,9 +45,11 @@ class ATOMView : public Connect {
     int httpCode = http->GET();
     if (httpCode > 0) {
       if (httpCode == HTTP_CODE_OK) {
-        ReadLoggingStream loggingStream(http->getStream(), Serial);
-        _doc.clear();
-        deserializeJson(_doc, loggingStream);
+        // ReadLoggingStream loggingStream(http->getStream(), Serial);
+        if (http->connected()) {
+          _doc.clear();
+          deserializeJson(_doc, http->getStream());
+        }
       }
     } else {
       String error(http->errorToString(httpCode));
@@ -124,8 +126,9 @@ class ATOMView : public Connect {
     delay(1);
   }
 
- private:
-  Display             _disp;
+private:
+  Display _disp;
+
   DynamicJsonDocument _doc;
 
   String _day;

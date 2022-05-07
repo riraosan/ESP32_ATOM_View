@@ -35,7 +35,8 @@ File Display::_file;
 int Display::_width  = 0;
 int Display::_height = 0;
 
-Display::Display() : _time(""),
+Display::Display() : _isOpen(false),
+                     _time(""),
                      _day(""),
                      _daytimeFormat("__YMD__ __NTP__"),
                      _degree(0.0),
@@ -68,11 +69,6 @@ void Display::begin(void) {
   _display.setColorDepth(8);
 
   //スプライト
-  _animation.fillSprite(_bgColor);
-  //_animation.setTextWrap(true, true);
-  _animation.setPsram(false);
-  _animation.setColorDepth(8);
-
   _data.fillSprite(_bgColor);
   _data.setFont(&fonts::efont);
   _data.setTextWrap(true, true);
@@ -84,6 +80,10 @@ void Display::begin(void) {
   _title.setTextWrap(true, true);
   _title.setPsram(false);
   _title.setColorDepth(8);
+
+  _animation.fillSprite(_bgColor);
+  _animation.setPsram(false);
+  _animation.setColorDepth(8);
 }
 
 void Display::setNtpTime(String ntpTime) {
@@ -187,8 +187,6 @@ void Display::displayWeather(void) {
   _data.print(press);
   _data.print("hPa  ");
 
-  // log_d("%2.1f*C, %2.1f%%, %4.1fhPa", _degree, _humidity, _pressure);
-
   _data.pushSprite(&_display, 2, 140);
   _data.deleteSprite();
 }
@@ -197,29 +195,38 @@ void Display::setImageFilename(String filename) {
   _filename = filename;
 }
 
+void Display::openImageFile(void) {
+  if (_isOpen) {
+    _gif.close();
+  }
+
+  if (_gif.open(_filename.c_str(), _GIFOpenFile, _GIFCloseFile, _GIFReadFile, _GIFSeekFile, _GIFDraw)) {
+    _isOpen = true;
+    log_d("success to open %s", _filename.c_str());
+  } else {
+    _isOpen = false;
+    log_e("failure to open %s", _filename.c_str());
+  }
+}
+
 void Display::displayImage(void) {
-  if (!_animation.createSprite(_width, _height)) {
-    log_e("image allocation failed");
+  if (!_animation.createSprite(140, 160)) {
+    log_e("image allocation failed. Free Heap : %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    _animation.deleteSprite();
     return;
   }
 
-  _animation.fillSprite(_bgColor);
-  // if (_gif.open(_filename.c_str(), _GIFOpenFile, _GIFCloseFile, _GIFReadFile, _GIFSeekFile, _GIFDraw)) {
-  //   log_d("success to open %s", _filename.c_str());
-  //   _gif.playFrame(true, NULL);
-  // } else {
-  //   log_e("failure to open %s", _filename.c_str());
-  // }
+  if (_isOpen) {
+    _gif.playFrame(true, NULL);
+  }
 
-  // _gif.close();
-
-  _animation.pushSprite(&_display, 110, 70);
+  _animation.pushSprite(&_display, 115, 20);
   _animation.deleteSprite();
 }
 
 void Display::update() {
   // to Sprite buffer
-  // displayImage();
+  displayImage();
   displayTitle();
   displayWeather();
 
@@ -269,7 +276,7 @@ int32_t Display::_GIFSeekFile(GIFFILE *pFile, int32_t iPosition) {
   f->seek(iPosition);
   pFile->iPos = (int32_t)f->position();
   i           = micros() - i;
-  //  Serial.printf("Seek time = %d us\n", i);
+  // Serial.printf("Seek time = %d us\n", i);
   return pFile->iPos;
 }
 

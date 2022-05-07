@@ -54,11 +54,13 @@ class Display {
   void displayWeather(void);
 
   void setImageFilename(String filename);
+  void openImageFile(void);
   void displayImage(void);
 
   static void sendMessage(MESSAGE message);
 
  private:
+  bool        _isOpen;
   AnimatedGIF _gif;
 
   static inline void    _GIFDraw(GIFDRAW *pDraw);

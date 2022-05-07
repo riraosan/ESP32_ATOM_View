@@ -93,8 +93,8 @@ class Controller {
     _atom.begin();
 #endif
 
-    //_serverChecker.attach(60 * 10, updatePeriod);
-    _serverChecker.attach(30, updatePeriod);
+    _serverChecker.attach(60 * 10, updatePeriod);
+    _serverChecker.once(30, updatePeriod);
 
     configTzTime(TIME_ZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
     _ntpClocker.attach_ms(500, setNtpTime);
