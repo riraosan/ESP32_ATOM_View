@@ -42,14 +42,14 @@ Display::Display() : _isOpen(false),
                      _degree(0.0),
                      _humidity(0.0),
                      _pressure(0.0),
-                     _forecastJP(""),
-                     _forecastEN(""),
-                     _filename(""),
-                     _bgColor(0x10cd),
-                     _bgTitle(0x0019),
-                     _bgTemperature(0x1c43),
-                     _bgPressure(0x1c43),
-                     _bgHumidity(0x1c43) {
+                     _forecastJP("晴れ"),
+                     _forecastEN("CLEAR"),
+                     _filename("/100.gif"),
+                     _bgColor(TFT_BLACK),
+                     _bgTitle(TFT_NAVY),
+                     _bgTemperature(TFT_NAVY),
+                     _bgPressure(TFT_NAVY),
+                     _bgHumidity(TFT_NAVY) {
 }
 
 void Display::sendMessage(MESSAGE message) {
@@ -95,25 +95,26 @@ void Display::setYMD(String ymd) {
 }
 
 void Display::displayTitle(void) {
-  if (!_title.createSprite(239, 32)) {
+  _title.deleteSprite();
+  if (!_title.createSprite(230, 32)) {
     log_e("title allocation failed");
     return;
   }
 
-  _title.fillSprite(_bgTitle);
+  _title.fillRoundRect(0, 0, 230, 32, 12, TFT_NAVY);
 
-  _title.setTextColor(0xFFFF, _bgTitle);
+  _title.setTextColor(TFT_WHITE, TFT_NAVY);
   _title.setTextSize(1);
-  _title.setCursor(0, 16 * 0);
-  _title.print(" Osaka Weather Station");
+  _title.setCursor(16, 16 * 0);
+  _title.print("Weather Station");
 
   String format(_daytimeFormat);
   format.replace("__NTP__", _time);
   format.replace("__YMD__", _day);
-  _title.setCursor(16, 16 * 1);
+  _title.setCursor(24, 16 * 1);
   _title.print(format.c_str());
 
-  _title.pushSprite(&_display, 2, 9);
+  _title.pushSprite(&_display, 6, 10);
   _title.deleteSprite();
 }
 
@@ -134,7 +135,8 @@ void Display::setWeatherforcastEN(String forecastEN) {
   _forecastEN = forecastEN;
 }
 void Display::displayWeather(void) {
-  if (!_data.createSprite(174, 96)) {
+  _data.deleteSprite();
+  if (!_data.createSprite(230, 80)) {
     log_e("data allocation failed");
     return;
   }
@@ -147,47 +149,40 @@ void Display::displayWeather(void) {
   sprintf(humid, "%2.0f", _humidity);
   sprintf(press, "%4.1f", _pressure);
 
-  _data.fillSprite(_bgColor);
+  _data.fillRoundRect(0, 0, 230, 80, 12, TFT_NAVY);
 
   // 予報（日本語）
-  _data.setCursor(0, 16 * 0);
-  _data.setTextColor(0xFFFF, _bgColor);
+  _data.setCursor(8, 16 * 0);
+  _data.setTextColor(TFT_WHITE, TFT_NAVY);
   _data.setTextSize(2);
-  _data.print(" ");
   _data.print(_forecastJP.c_str());
 
   // 予報（英語）
-  _data.setCursor(0, 16 * 2);
-  _data.setTextColor(0xFFFF, _bgColor);
+  _data.setCursor(8, 16 * 2);
+  _data.setTextColor(TFT_WHITE, TFT_NAVY);
   _data.setTextSize(1);
-  _data.print("  ");
   _data.print(_forecastEN.c_str());
 
   // 気温
-  _data.setCursor(0, 16 * 3);
-  _data.setTextColor(0xFFFF, _bgTemperature);
+  _data.setCursor(8, 16 * 4);
+  _data.setTextColor(TFT_WHITE, TFT_NAVY);
   _data.setTextSize(1);
-  _data.print("   Degree:");
   _data.print(tempe);
-  _data.print("*C     ");
+  _data.print("*C ");
 
   // 湿度
-  _data.setCursor(0, 16 * 4);
-  _data.setTextColor(0xFFFF, _bgHumidity);
+  _data.setTextColor(TFT_WHITE, TFT_NAVY);
   _data.setTextSize(1);
-  _data.print(" Humidity:");
   _data.print(humid);
-  _data.print("%        ");
+  _data.print("% ");
 
   // 大気圧
-  _data.setCursor(0, 16 * 5);
-  _data.setTextColor(0xFFFF, _bgPressure);
+  _data.setTextColor(TFT_WHITE, TFT_NAVY);
   _data.setTextSize(1);
-  _data.print(" Pressure:");
   _data.print(press);
-  _data.print("hPa  ");
+  _data.print("hPa");
 
-  _data.pushSprite(&_display, 2, 140);
+  _data.pushSprite(&_display, 6, 140);
   _data.deleteSprite();
 }
 
@@ -210,6 +205,7 @@ void Display::openImageFile(void) {
 }
 
 void Display::displayImage(void) {
+  _animation.deleteSprite();
   if (!_animation.createSprite(140, 160)) {
     log_e("image allocation failed. Free Heap : %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   } else {
@@ -224,9 +220,17 @@ void Display::displayImage(void) {
   }
 }
 
+void Display::displayColorBar(void) {
+  _display.fillScreen(TFT_BLACK);
+  _display.drawPngFile(SPIFFS, "/SMPTE_Color_Bars.png", 0, 0);
+  _display.display();
+}
+
 void Display::update() {
+  _display.fillScreen(_bgColor);
+
   // to Sprite buffer
-  //displayImage();
+  displayImage();
   displayTitle();
   displayWeather();
 

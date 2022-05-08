@@ -14,13 +14,14 @@
 
 class ATOMView : public Connect {
 public:
-  ATOMView() : Connect("atom_view_test", "ATOM_VIEW-G", 80),
-               _doc(700),
-               _apiURI("/api/v1/weather.json") {
-  }
+ ATOMView() : Connect("atom_view", "ATOM_VIEW-G", 80),
+              _doc(700),
+              _apiURI("/api/v1/weather.json") {
+ }
 
   void begin(const char *ssid, const char *password) {
     _disp.begin();
+    _disp.displayColorBar();
     Connect::begin(ssid, password);
   }
 

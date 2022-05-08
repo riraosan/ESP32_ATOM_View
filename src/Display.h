@@ -57,6 +57,8 @@ class Display {
   void openImageFile(void);
   void displayImage(void);
 
+  void displayColorBar(void);
+
   static void sendMessage(MESSAGE message);
 
  private:
