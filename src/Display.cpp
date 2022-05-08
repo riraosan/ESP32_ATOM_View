@@ -212,21 +212,21 @@ void Display::openImageFile(void) {
 void Display::displayImage(void) {
   if (!_animation.createSprite(140, 160)) {
     log_e("image allocation failed. Free Heap : %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  } else {
+    _animation.fillSprite(_bgColor);
+
+    if (_isOpen) {
+      _gif.playFrame(true, NULL);
+    }
+
+    _animation.pushSprite(&_display, 50, 50);
     _animation.deleteSprite();
-    return;
   }
-
-  if (_isOpen) {
-    _gif.playFrame(true, NULL);
-  }
-
-  _animation.pushSprite(&_display, 115, 20);
-  _animation.deleteSprite();
 }
 
 void Display::update() {
   // to Sprite buffer
-  displayImage();
+  //displayImage();
   displayTitle();
   displayWeather();
 

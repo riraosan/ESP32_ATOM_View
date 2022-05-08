@@ -19,9 +19,9 @@ public:
                _apiURI("/api/v1/weather.json") {
   }
 
-  void begin(void) {
+  void begin(const char *ssid, const char *password) {
     _disp.begin();
-    Connect::begin(SECRET_SSID, SECRET_PASS);
+    Connect::begin(ssid, password);
   }
 
   void sendMessage(MESSAGE message) {
