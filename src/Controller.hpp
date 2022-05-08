@@ -40,7 +40,7 @@ using ATOM = ATOMView;
 #endif
 
 class Controller {
- public:
+public:
   Controller() {}
 
   static void sendMessage(MESSAGE message) {
@@ -87,9 +87,10 @@ class Controller {
     if (!SPIFFS.begin()) {
       log_e("fail to mount.");
     }
-    // Serial.begin(115200);
-
     _atom.begin(SECRET_SSID, SECRET_PASS);
+
+    configTzTime(TIME_ZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
+    _ntpClocker.attach_ms(500, setNtpTime);
 
 #if defined(ATOM_DOC)
     _atom.startDocAPI();
@@ -101,8 +102,6 @@ class Controller {
     _firstChecker.once(30, firstUpdate);
 #endif
 
-    configTzTime(TIME_ZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
-    _ntpClocker.attach_ms(500, setNtpTime);
     log_d("Free Heap : %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   }
 
@@ -110,7 +109,7 @@ class Controller {
     switch (_message) {
       case MESSAGE::MSG_UPDATE_DOCUMENT:
         _atom.sendMessage(_message);
-        //_atom.update();
+        _atom.update();
 
         sendMessage(MESSAGE::MSG_UPDATE_NOTHING);
         break;
@@ -131,7 +130,7 @@ class Controller {
   static MESSAGE _message;
   static bool    _clock;
 
- private:
+private:
   Ticker _serverChecker;
   Ticker _firstChecker;
   Ticker _ntpClocker;
